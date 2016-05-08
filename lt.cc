@@ -7,13 +7,15 @@
 
 #include <curl/curl.h>
 
+/* We'll need a mutex at some point to avoid race conditions */
+std::mutex mtx;
+
 /* Diry hack to avoid cURL polluting STDOUT */
 size_t write_data(void *buffer, size_t size, size_t nmemb, void *userp) {
     return size * nmemb;
 }
 
-std::mutex mtx;
-
+/* Abstract type encoding a request result */
 typedef struct {
     std::chrono::duration<double, std::milli> t; /* Time to process the request */
     long return_code; /* Return code of the request */
@@ -43,20 +45,18 @@ void make_request(std::string url, int max_tries, std::vector<Result> *shared_re
             result.t = std::chrono::duration<double, std::milli>(t_end - t_start);
             curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &result.return_code);
 
-            /* Let's avoid race conditions */
             mtx.lock();
             shared_results->push_back(result);
             mtx.unlock();
         }
         curl_easy_cleanup(curl);
     }
-
     curl_global_cleanup();
 }
 
 void lt(std::string url, int n_threads, int n_requests) {
     std::vector<Result> results;
-    std::vector<std::thread> threads;
+    std::vector<std::thread> threads; /* Handmade threadpool */
 
     for (int i = 0; i < n_threads; i++)
         threads.push_back(std::thread(make_request, url, n_requests, &results));

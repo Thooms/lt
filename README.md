@@ -14,6 +14,8 @@ $ ./lt irrealis.me 10 20
 [LT] 200 OK responses (100%)
 ```
 
+The code is dead simple, no fancy stuff here.
+
 ## Build
 
 Just issue `make` in the source directory. It depends on `g++` and
