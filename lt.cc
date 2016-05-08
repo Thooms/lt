@@ -9,7 +9,7 @@
 
 /* Diry hack to avoid cURL polluting STDOUT */
 size_t write_data(void *buffer, size_t size, size_t nmemb, void *userp) {
-   return size * nmemb;
+    return size * nmemb;
 }
 
 std::mutex mtx;
